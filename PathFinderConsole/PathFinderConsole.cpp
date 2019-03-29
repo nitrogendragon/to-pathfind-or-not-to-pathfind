@@ -5,16 +5,18 @@
 #include <iostream>
 #include <random>
 using namespace std;
-
+const int rows = 10;
+const int cols = 10;
+void reRun();//will prompt for user input and continue executing if user enters anything except 'exit;
 class map {
 	public:
-		bool grid[10][10];
+		bool grid[rows][cols];
 		
-
-		void assignwalls(bool (&grid)[][10]);
+		
+		void assignWalls(bool grid[rows][cols]);//will use random numbers to create the map via bools i.e. true is wall false is roamable land
 	
 };
-void map::assignwalls(bool (&grid)[][10]) {
+void map::assignWalls(bool grid[rows][cols]) {
 	
 	random_device rd; // obtain a random number from hardware
 	mt19937 eng(rd()); // seed the generator
@@ -22,6 +24,7 @@ void map::assignwalls(bool (&grid)[][10]) {
 	for (int i =0;i < 10;i++) {
 		for (int y = 0;y < 10;y++) {
 			cout<<distr(eng)<<endl;//generate a number inclusive in the range
+			grid[i][y] = (distr(eng) > 80) ? true : false;
 		}
 
 	}
@@ -29,9 +32,15 @@ void map::assignwalls(bool (&grid)[][10]) {
 }
 int main()
 {
-	bool rows[10];
+	
 	map map1;
-	map1.assignwalls(map1.rows, map1.columns);
+	map1.assignwalls(map1.grid);
+	for (int i = 0;i < rows;i++) {
+		for (int y = 0;y < cols;y++) {
+			cout << map1.grid[i][y] << " ";
+		}
+		cout << endl;
+	}
 }
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu
