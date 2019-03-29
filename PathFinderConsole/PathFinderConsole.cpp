@@ -3,10 +3,35 @@
 
 #include "pch.h"
 #include <iostream>
+#include <random>
+using namespace std;
 
+class map {
+	public:
+		bool grid[10][10];
+		
+
+		void assignwalls(bool (&grid)[][10]);
+	
+};
+void map::assignwalls(bool (&grid)[][10]) {
+	
+	random_device rd; // obtain a random number from hardware
+	mt19937 eng(rd()); // seed the generator
+	uniform_int_distribution<> distr(0, 99); // define the range
+	for (int i =0;i < 10;i++) {
+		for (int y = 0;y < 10;y++) {
+			cout<<distr(eng)<<endl;//generate a number inclusive in the range
+		}
+
+	}
+	return;
+}
 int main()
 {
-    std::cout << "Hello World!\n"; 
+	bool rows[10];
+	map map1;
+	map1.assignwalls(map1.rows, map1.columns);
 }
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu
