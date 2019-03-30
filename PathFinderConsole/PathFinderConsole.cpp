@@ -7,6 +7,7 @@
 #include <string>
 #include <stdlib.h>
 #include <vector>
+#include <sstream>
 using namespace std;
 const int rows = 10;
 const int cols = 10;
@@ -132,14 +133,43 @@ void reRun() {
 	
 }
 
+
+//asks user for a number which at least for now will just be used to set up different sizes of maps
+int getNum() {
+	int size=0;
+	string ui;//user input
+	
+	while (size==0) 
+	{
+		cout << "please enter an integer to use as for the square map dimensions" << endl;
+		getline(cin, ui);
+		bool has_only_digits = (ui.find_first_not_of("0123456789") == string::npos);//checks to see if we have a number
+		if (has_only_digits == true) //if we do..
+		{
+			int size = atoi(ui.c_str());//convert to integer
+			cout << "the value of size is " << size << endl;
+			return size;
+		}
+		
+		
+		
+	}
+	
+
+	
+
+	
+}
 int main()
 {
 	ClearScreen();
 	while (proceederval==true)
 	{
-		
-		map map1(4);
-		map1.assignWalls(map1.grid);
+		int dim = 0;
+		dim = getNum();
+		cout << "the value of dim is " << dim << endl;
+		map map1(dim);//initializes map1 with a user defined size
+		map1.assignWalls(map1.grid);//randomly sets walls to the grid for map1
 		for (int i = 0;i < rows;i++) 
 		{
 			for (int y = 0;y < cols;y++) 
@@ -149,9 +179,9 @@ int main()
 			cout << endl;
 		}
 		map1.addWall();//adds walls to dynamic '2D' array aka pointers to 1D arrays
-		map1.Print();
+		map1.Print();//prints out the values for the dynamic maps map/grid(gPtr) for map1
 		
-		reRun();
+		reRun();//asks whether the user wants to run the program again or close it
 	}
 }
 
