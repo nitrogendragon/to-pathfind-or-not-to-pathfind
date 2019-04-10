@@ -39,17 +39,24 @@ class map {
 //our impromptu navigator who will treak through the perilous depths of the dungeon
 class pathfinder : public map {
 	protected:
-		int sizeX, sizeY;//rows and columns for map
+		int sizeX, sizeY;//rows / columns for map
+		int totSize = sizeX * sizeY;//may use for shortcutting to get total size
 		bool *ary = new bool[sizeX*sizeY];//our dynamically allocatable array which will be a lightweight solution for representing the map as opposed to 2D attempts
-
+		int *checkpoints = new int[totSize];//this will hold all the points that we need to return to in the case that we reach a deadend while still having other paths we could have taken from these points
+		int *decisionArray = new int[sizeX*sizeY];//this array will hold integers that will correspond to whether a location has been visited and what action to take based on previous actions corresponding to the current int
+		int startpoint;//the value associated to the startpoint
+		int endpoint;//the value associated to the endpoint
+												  
 		/* ary[i][j] is then rewritten as
-		*ary[i*sizeX + j]//reference in case I ever forget
-		*/
+		 * ary[i*sizeX + j]//reference in case I ever forget
+		 */
 	public:
 		void move();  //handles decision making and execution of movement through map
+		void startEndPoint(int rows, int columns); // sets up the starting point and ending point of the map exploration
 		pathfinder(); //constructor
 		~pathfinder(); //destructor
 };
+
 
 /*https://www.geeksforgeeks.org/create-dynamic-2d-array-inside-class-c/ link to where I got help for setting up a non-const initialzed '2D' array*/
 map::map(int C)
@@ -163,8 +170,8 @@ int getNum() {
 		if (has_only_digits == true) //if we do..
 		{
 			int size = atoi(ui.c_str());//convert to integer
-			cout << "the value of size is " << size << endl;
-			return size;
+			cout << "the value of size is " << size << endl;//print it out
+			return size;//return our size for the 'box' map dimensions
 		}
 		
 		
@@ -183,13 +190,46 @@ void pathfinder::move()
 
 }
 
+
+void pathfinder::startEndPoint(int rows, int columns) 
+{
+	int rows = rows;
+	int cols = columns;
+	bool endpointset = false;//will be used to make sure we have a valid endpoint
+	bool startpointset = false;//will be used to make sure we have a valid startpoint
+	while (!endpointset) //while we haven't found a valid endpoint..
+	{
+		endpoint = genRand(0, rows*cols - 1);//generate a random value within the range of the map
+		if (ary[endpoint] == false)//check to see if there is a wall there
+		{
+			endpointset = true;//stop checking if there wasn't a wall and we have our endpoint
+		}
+	}
+	while (!startpointset)//while we haven't found a valid startpoint...
+	{
+		startpoint = genRand(0, rows*cols - 1);//generate a random value within the range of the map
+		if (ary[startpoint] == false && startpoint != endpoint)// check to see if there is a wall there and if this is the endpoint
+		{
+			startpointset = true;//stop checking for walls and overlap and we have our starting point
+		}
+	}
+	cout << "this is the starting point " << startpoint <<endl;
+	cout << "this is the endpoint " << endpoint << endl;
+}
+
+
 pathfinder::pathfinder(): map(C)
 {
+	sizeX = C;
+	sizeY = C;
 	for (int i = 0; i < C; i++) 
 	{
 		for (int y = 0; y < C;y++) 
 		{
 			ary[i*C + y] = gPtr[i][y];//sets the values for pathfinders single dimension array to be those of the maps array of pointers to arrays map. this unnecesarry code may be changed later but its for practice right now
+			checkpoints[i*C + y] = NULL;//sets all values to NULL since we dont have any place to return to at the start
+			decisionArray[i*C + y] = 0;//this will set all values to zero which will correspond to not having visited or more accurately made a decision at the lcoation yet
+		
 		}
 	}
 
@@ -197,8 +237,14 @@ pathfinder::pathfinder(): map(C)
 
 pathfinder::~pathfinder()
 {
-
+	
+	delete[] ary,checkpoints,decisionArray;//get rid of unncessary stuff here for now until we determine we want to use it longer
+	
+	ary = NULL;//get rid of dangly things
+	checkpoints = NULL;//get rid of dangly things
+	decisionArray = NULL;//get rid of dangly things
 }
+
 
 
 int main()
