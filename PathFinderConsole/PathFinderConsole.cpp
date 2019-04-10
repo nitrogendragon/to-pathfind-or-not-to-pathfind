@@ -18,12 +18,14 @@ void ClearScreen()//clears the screen sord've
 {
 	cout << string(100, '\n');
 }
-
+//the map to be navigated 
 class map {
-	int C; // No. of cols
-	bool** gPtr; //pointer to pointer of bools to be used for creating impromptu 2D array dynamically
+	protected:
+		int C; // No. of cols
+		bool** gPtr; //pointer to pointer of bools to be used for creating impromptu 2D array dynamically
 	public:
 		void Print();//function used to print dynamically sized map
+		
 		map(int C);   // Constructor 
 		~map(); //destructor
 	// function to add a wall to the map 
@@ -34,7 +36,20 @@ class map {
 		void assignWalls(bool grid[rows][cols]);//will use random numbers to create the map via bools i.e. true is wall false is roamable land
 	
 };
+//our impromptu navigator who will treak through the perilous depths of the dungeon
+class pathfinder : public map {
+	protected:
+		int sizeX, sizeY;//rows and columns for map
+		bool *ary = new bool[sizeX*sizeY];//our dynamically allocatable array which will be a lightweight solution for representing the map as opposed to 2D attempts
 
+		/* ary[i][j] is then rewritten as
+		*ary[i*sizeX + j]//reference in case I ever forget
+		*/
+	public:
+		void move();  //handles decision making and execution of movement through map
+		pathfinder(); //constructor
+		~pathfinder(); //destructor
+};
 
 /*https://www.geeksforgeeks.org/create-dynamic-2d-array-inside-class-c/ link to where I got help for setting up a non-const initialzed '2D' array*/
 map::map(int C)
@@ -89,6 +104,7 @@ void map::assignWalls(bool grid[rows][cols]) {
 	}
 	return;
 }
+
 
 void map::addWall() {
 	int rand;
@@ -160,6 +176,31 @@ int getNum() {
 
 	
 }
+
+
+void pathfinder::move()
+{
+
+}
+
+pathfinder::pathfinder(): map(C)
+{
+	for (int i = 0; i < C; i++) 
+	{
+		for (int y = 0; y < C;y++) 
+		{
+			ary[i*C + y] = gPtr[i][y];//sets the values for pathfinders single dimension array to be those of the maps array of pointers to arrays map. this unnecesarry code may be changed later but its for practice right now
+		}
+	}
+
+}
+
+pathfinder::~pathfinder()
+{
+
+}
+
+
 int main()
 {
 	ClearScreen();
