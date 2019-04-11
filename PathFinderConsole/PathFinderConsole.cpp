@@ -54,7 +54,7 @@ class pathfinder : public map {
 	public:
 		void move();  //handles decision making and execution of movement through map
 		void startEndPoint(int dim); // sets up the starting point and ending point of the map exploration
-		void addwalls();
+		bool addwalls();//adds walls to the array being passed as a function argument
 		pathfinder(int dim); //constructor
 		~pathfinder(); //destructor
 };
@@ -97,6 +97,7 @@ map::~map() {
 	cout << "deleting gptr" << endl;
 	delete [] gPtr;
 	gPtr = NULL;
+	cout << "gPtr is NULL" << endl;
 	cout << "deleting map array" << endl;
 	delete[]mapArray;
 	mapArray = NULL;
@@ -208,21 +209,19 @@ int getNum()
 	
 }
 
-void pathfinder::addwalls() {
-		int rand;
-		int size = this->sizeX;//sets to the objects C value which is determined upon creation via contstructor value
-
-		for (int i = 0;i < sizeX;i++) 
-		{
-			
-				rand = genRand();//grabs a random number in the predefined range
-				ary[i] = (rand > 80) ? true : false;//determines whether the location will be a wall(true) or free roamable land(false)
+bool pathfinder::addwalls() {
+		int rand=0;
+		bool tf=true;
+		
+		rand = genRand();//grabs a random number in the predefined range
+		cout << rand << endl;
+		tf = (rand > 80) ? true : false;//determines whether the location will be a wall(true) or free roamable land(false)
 				
 			
 
-		}
+		
 
-		return;
+		return tf;
 }
 void pathfinder::move()
 {
@@ -234,13 +233,13 @@ void pathfinder::startEndPoint(int dim)
 {
 	int count = 0;
 	cout << "we made it to the start" << endl;
-	int size = dim * dim;
+	int si = dim * dim;
 	bool endpointset = false;//will be used to make sure we have a valid endpoint
 	bool startpointset = false;//will be used to make sure we have a valid startpoint
-	while (!endpointset && count<3) //while we haven't found a valid endpoint..
+	while (!endpointset ) //while we haven't found a valid endpoint..
 	{
 		count++;
-		endpoint = genRand(0, size-1);//generate a random value within the range of the map
+		endpoint = genRand(0, si-1);//generate a random value within the range of the map
 		if (ary[endpoint] == false)//check to see if there is a wall there
 		{
 			endpointset = true;//stop checking if there wasn't a wall and we have our endpoint
@@ -251,10 +250,10 @@ void pathfinder::startEndPoint(int dim)
 		}
 	}
 	count = 0;
-	while (!startpointset && count<3)//while we haven't found a valid startpoint...
+	while (!startpointset )//while we haven't found a valid startpoint...
 	{
 		count++;
-		startpoint = genRand(0, size - 1);//generate a random value within the range of the map
+		startpoint = genRand(0, si - 1);//generate a random value within the range of the map
 		if (ary[startpoint] == false && startpoint != endpoint)// check to see if there is a wall there and if this is the endpoint
 		{
 			startpointset = true;//stop checking for walls and overlap and we have our starting point
@@ -296,9 +295,10 @@ pathfinder::pathfinder(int dim):map(C)
 			cout << "decisionArray[" << i << "] is " << decisionArray[i] << endl;
 		}
 	}
-	addwalls();
-	for (int i = 0;i < size;i++) {
+	
+	for (int i = 0;i < (size);i++) {
 		if (&ary[i]) {
+			ary[i] = addwalls();
 			cout << "ary[" << i << "] is " << ary[i] << endl;
 		}
 	}
