@@ -24,8 +24,9 @@ class map {
 		int C; // No. of cols
 		bool** gPtr; //pointer to pointer of bools to be used for creating impromptu 2D array dynamically
 	public:
+		bool *mapArray;
 		void Print();//function used to print dynamically sized map
-		
+		int pubdim = C;//value to be used to access C value from pathfinder class startendpoint function
 		map(int C);   // Constructor 
 		~map(); //destructor
 	// function to add a wall to the map 
@@ -41,9 +42,9 @@ class pathfinder : public map {
 	protected:
 		int sizeX, sizeY;//rows / columns for map
 		int totSize = sizeX * sizeY;//may use for shortcutting to get total size
-		bool *ary = new bool[sizeX*sizeY];//our dynamically allocatable array which will be a lightweight solution for representing the map as opposed to 2D attempts
-		int *checkpoints = new int[totSize];//this will hold all the points that we need to return to in the case that we reach a deadend while still having other paths we could have taken from these points
-		int *decisionArray = new int[sizeX*sizeY];//this array will hold integers that will correspond to whether a location has been visited and what action to take based on previous actions corresponding to the current int
+		bool *ary;//our dynamically allocatable array which will be a lightweight solution for representing the map as opposed to 2D attempts
+		int *checkpoints;//this will hold all the points that we need to return to in the case that we reach a deadend while still having other paths we could have taken from these points
+		int *decisionArray;//this array will hold integers that will correspond to whether a location has been visited and what action to take based on previous actions corresponding to the current int
 		int startpoint;//the value associated to the startpoint
 		int endpoint;//the value associated to the endpoint
 												  
@@ -52,8 +53,9 @@ class pathfinder : public map {
 		 */
 	public:
 		void move();  //handles decision making and execution of movement through map
-		void startEndPoint(int rows, int columns); // sets up the starting point and ending point of the map exploration
-		pathfinder(); //constructor
+		void startEndPoint(int dim); // sets up the starting point and ending point of the map exploration
+		void addwalls();
+		pathfinder(int dim); //constructor
 		~pathfinder(); //destructor
 };
 
@@ -62,37 +64,53 @@ class pathfinder : public map {
 map::map(int C)
 {
 	this->C = C;
-
+	pubdim = this->C;//value to be used to access C value from pathfinder class startendpoint function
 	// Create a dynamic array of pointers 
 	gPtr = new bool*[C];
-
+	mapArray = new bool[C*C];
 	// Create a row for every pointer 
 	for (int i = 0; i < C; i++)
 	{
 		// Note : Rows may not be contiguous 
 		gPtr[i] = new bool[C];
+		
 
 		// Initialize all entries as false to indicate 
 		// that there are no walls initially 
 		memset(gPtr[i], false, C * sizeof(bool));
 	}
+	for (int y = 0;y < C*C;y++) {
+		mapArray[y] = false;
+	}
 }
 
 map::~map() {
+	//gPtr = NULL;
+	//mapArray = NULL;
+	
 	for (int i = 0; i < this->C;i++) {
-
-		delete[]gPtr[i];
+		
+			delete[]gPtr[i];
+		
 	}
+	
+	cout << "deleting gptr" << endl;
 	delete [] gPtr;
 	gPtr = NULL;
+	cout << "deleting map array" << endl;
+	delete[]mapArray;
+	mapArray = NULL;
+	cout << "mapArray is NULL" << endl;
 }
 
 
 int genRand(int low =0, int high = 99) 
 {
+	int l = low;
+	int h = high;
 	random_device rd; // obtain a random number from hardware
 	mt19937 eng(rd()); // seed the generator
-	uniform_int_distribution<> distr(0, 99); // define the range
+	uniform_int_distribution<> distr(l, h); // define the range
 	return distr(eng);
 }
 
@@ -122,9 +140,11 @@ void map::addWall() {
 			rand = genRand();//grabs a random number in the predefined range
 			cout << rand << endl;//generate a number inclusive in the range
 			gPtr[i][y] = (rand > 80) ? true : false;//determines whether the location will be a wall(true) or free roamable land(false)
+			mapArray[i*C + y] = gPtr[i][y];
 		}
 
 	}
+
 	return;
 	
 }
@@ -158,59 +178,90 @@ void reRun() {
 
 
 //asks user for a number which at least for now will just be used to set up different sizes of maps
-int getNum() {
+int getNum() 
+{
+	bool cont=true;
 	int size=0;
 	string ui;//user input
-	
-	while (size==0) 
+	std::cout << "we are starting/restarting and ui is " << ui << endl;
+	while (cont==true) 
 	{
-		cout << "please enter an integer to use as for the square map dimensions" << endl;
+		int size = 0;
+		cout << size << endl;
+		cout << "please enter a positive integer greater than 1 to use as for the square map dimensions" << endl;
 		getline(cin, ui);
 		bool has_only_digits = (ui.find_first_not_of("0123456789") == string::npos);//checks to see if we have a number
 		if (has_only_digits == true) //if we do..
 		{
-			int size = atoi(ui.c_str());//convert to integer
-			cout << "the value of size is " << size << endl;//print it out
-			return size;//return our size for the 'box' map dimensions
+			size = atoi(ui.c_str());//convert to integer
+			if (size> 1) {
+				cout << "the value of size is " << size << endl;//print it out
+				cin.clear(); // clear the failed state
+				cin.ignore(1000, '\n'); // throw away the non-numeric input
+				cont = false;
+				return size;//return our size for the 'box' map dimensions
+				cout << "please press enter to confirm your value" << size << " " << endl;
+			}
 		}
-		
-		
-		
 	}
 	
-
-	
-
 	
 }
 
+void pathfinder::addwalls() {
+		int rand;
+		int size = this->sizeX;//sets to the objects C value which is determined upon creation via contstructor value
 
+		for (int i = 0;i < sizeX;i++) 
+		{
+			
+				rand = genRand();//grabs a random number in the predefined range
+				ary[i] = (rand > 80) ? true : false;//determines whether the location will be a wall(true) or free roamable land(false)
+				
+			
+
+		}
+
+		return;
+}
 void pathfinder::move()
 {
 
 }
 
 
-void pathfinder::startEndPoint(int rows, int columns) 
+void pathfinder::startEndPoint(int dim) 
 {
-	int rows = rows;
-	int cols = columns;
+	int count = 0;
+	cout << "we made it to the start" << endl;
+	int size = dim * dim;
 	bool endpointset = false;//will be used to make sure we have a valid endpoint
 	bool startpointset = false;//will be used to make sure we have a valid startpoint
-	while (!endpointset) //while we haven't found a valid endpoint..
+	while (!endpointset && count<3) //while we haven't found a valid endpoint..
 	{
-		endpoint = genRand(0, rows*cols - 1);//generate a random value within the range of the map
+		count++;
+		endpoint = genRand(0, size-1);//generate a random value within the range of the map
 		if (ary[endpoint] == false)//check to see if there is a wall there
 		{
 			endpointset = true;//stop checking if there wasn't a wall and we have our endpoint
 		}
+		else 
+		{
+			cout << "still looking for endpoint" << endl;
+		}
 	}
-	while (!startpointset)//while we haven't found a valid startpoint...
+	count = 0;
+	while (!startpointset && count<3)//while we haven't found a valid startpoint...
 	{
-		startpoint = genRand(0, rows*cols - 1);//generate a random value within the range of the map
+		count++;
+		startpoint = genRand(0, size - 1);//generate a random value within the range of the map
 		if (ary[startpoint] == false && startpoint != endpoint)// check to see if there is a wall there and if this is the endpoint
 		{
 			startpointset = true;//stop checking for walls and overlap and we have our starting point
+		}
+		else
+		{
+			cout << "still looking for starting point" << endl;
 		}
 	}
 	cout << "this is the starting point " << startpoint <<endl;
@@ -218,45 +269,93 @@ void pathfinder::startEndPoint(int rows, int columns)
 }
 
 
-pathfinder::pathfinder(): map(C)
+pathfinder::pathfinder(int dim):map(C)
 {
-	sizeX = C;
-	sizeY = C;
-	for (int i = 0; i < C; i++) 
-	{
-		for (int y = 0; y < C;y++) 
-		{
-			ary[i*C + y] = gPtr[i][y];//sets the values for pathfinders single dimension array to be those of the maps array of pointers to arrays map. this unnecesarry code may be changed later but its for practice right now
-			checkpoints[i*C + y] = NULL;//sets all values to NULL since we dont have any place to return to at the start
-			decisionArray[i*C + y] = 0;//this will set all values to zero which will correspond to not having visited or more accurately made a decision at the lcoation yet
-		
+	int size = dim*dim;//sets size to dim dimensions
+	cout << "size is " << size << endl;
+	
+	ary = new bool[size];
+	
+	for (int i = 0;i < size;i++) {
+		if (&ary[i]){
+			ary[i] = false;//setting initial values
+			cout << "ary[" << i << "] is " << ary[i] << endl;
 		}
 	}
+	checkpoints = new int[size];
+	for (int i = 0;i < size;i++) {
+		if (&checkpoints[i]) {
+			checkpoints[i] = 0;//setting initial values
+			cout << "checkpoints[" << i << "] is " << checkpoints[i] << endl;
+		}
+	}
+	decisionArray = new int[size];
+	for (int i = 0;i < size;i++) {
+		if (&decisionArray[i]) {
+			decisionArray[i] = 0;//setting initial values
+			cout << "decisionArray[" << i << "] is " << decisionArray[i] << endl;
+		}
+	}
+	addwalls();
+	for (int i = 0;i < size;i++) {
+		if (&ary[i]) {
+			cout << "ary[" << i << "] is " << ary[i] << endl;
+		}
+	}
+	//sizeX = dim;//sets sizeX to value of whatever maps we want to use pubdim value which is just the C-value of the map. not certain if this was a good idea or not but it was a worthwhile experiment
+	//sizeY = dim;//sets sizeY to value of whatever maps we want to use pubdim value which is just the C-value of the map. not certain if this was a good idea or not but it was a worthwhile experiment
+	for (int i = 0; i < (size); i++) 
+	{
+			
+			checkpoints[i] = 0;//sets all values to NULL since we dont have any place to return to at the start
+			decisionArray[i] = 0;//this will set all values to zero which will correspond to not having visited or more accurately made a decision at the lcoation yet
+		
+		
+	}
+	
+	cout << "this is the size of ary" << sizeof(ary) << endl;
+	cout << "this is the size of checkpoints" <<sizeof(checkpoints) << endl;
+	cout << "this is the size of decisionArray" <<sizeof(decisionArray) << endl;
+	cout << "pathfinder created" << endl;
 
 }
 
 pathfinder::~pathfinder()
 {
 	
-	delete[] ary,checkpoints,decisionArray;//get rid of unncessary stuff here for now until we determine we want to use it longer
 	
+	//cout << "we have begun destroying pathfinder" << endl;
+	delete[] ary;
+	cout << "ary is gone" << endl;
 	ary = NULL;//get rid of dangly things
+	cout << "ary is Null" << endl;
+	delete[] checkpoints;
+	cout << "checkpoints is gone" << endl;
 	checkpoints = NULL;//get rid of dangly things
+	cout << "checkpoints is null" << endl;
+	delete[] decisionArray;//get rid of unncessary stuff here for now until we determine we want to use it longer
+	cout << "decisionArray is gone" << endl;
+	
+	
 	decisionArray = NULL;//get rid of dangly things
+	cout << "decisionArray is null" << endl;
+	cout << "pathfinder destroyed" << endl;
+	
 }
 
 
 
 int main()
 {
-	ClearScreen();
-	while (proceederval==true)
+	ClearScreen();//clears the screen for us maybe...
+	while (proceederval==true)//checks to make sure we still want to continue which on the first run we will ofc and thusly runs it and then depending on rerun function will decide whether to do so again
 	{
-		int dim = 0;
-		dim = getNum();
-		cout << "the value of dim is " << dim << endl;
-		map map1(dim);//initializes map1 with a user defined size
-		map1.assignWalls(map1.grid);//randomly sets walls to the grid for map1
+		int dim = 0;//initializes the dimension int to 0
+		dim = getNum();//asks the user for a number to set dim to
+		cout << "the value of dim is " << dim << endl;//prints dim
+		map map1(dim);//initializes map1 with a user defined size of dim
+		map1.assignWalls(map1.grid);//randomly sets walls to the grid for map1 noting that this is the const based map which isn't using the user input dim dimensions
+		
 		for (int i = 0;i < rows;i++) 
 		{
 			for (int y = 0;y < cols;y++) 
@@ -267,8 +366,13 @@ int main()
 		}
 		map1.addWall();//adds walls to dynamic '2D' array aka pointers to 1D arrays
 		map1.Print();//prints out the values for the dynamic maps map/grid(gPtr) for map1
+		cout <<"this is the dimension of map1 "<<map1.pubdim << endl;
+		pathfinder pf1(dim);//sets up the pathfinder map using map1's data
+		cout << "for some reason putting this here let's startendpoint work and without it doesn't" << endl;
+		pf1.startEndPoint(dim);//sets up the start and endpoints for the pfs map
 		
 		reRun();//asks whether the user wants to run the program again or close it
+		//cout << "help" << endl;
 	}
 }
 
