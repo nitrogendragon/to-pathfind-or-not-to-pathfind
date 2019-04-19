@@ -40,11 +40,14 @@ class map {
 //our impromptu navigator who will treak through the perilous depths of the dungeon
 class pathfinder : public map {
 	protected:
+		int curPos;//the current position of the pathfinder in the map
 		int sizeX, sizeY;//rows / columns for map
 		int totSize = sizeX * sizeY;//may use for shortcutting to get total size
 		bool *ary;//our dynamically allocatable array which will be a lightweight solution for representing the map as opposed to 2D attempts
 		int *checkpoints;//this will hold all the points that we need to return to in the case that we reach a deadend while still having other paths we could have taken from these points
 		int *decisionArray;//this array will hold integers that will correspond to whether a location has been visited and what action to take based on previous actions corresponding to the current int
+		int *leftBounds;//this array will hold the left boundaries for ensuring that when trying to move particularly left we dont just jump to a row down on the other side of the map
+		int *rightBounds;//this pointer to an int array will hold the left boundaries for ensuring that when trying to move right we dont just jum to a row up on the other side of the map
 		int startpoint;//the value associated to the startpoint
 		int endpoint;//the value associated to the endpoint
 												  
@@ -52,7 +55,8 @@ class pathfinder : public map {
 		 * ary[i*sizeX + j]//reference in case I ever forget
 		 */
 	public:
-		void move();  //handles decision making and execution of movement through map
+		void setbounds(int dim);
+		void move(int dim);  //handles decision making and execution of movement through map
 		void startEndPoint(int dim); // sets up the starting point and ending point of the map exploration
 		bool addwalls();//adds walls to the array being passed as a function argument
 		pathfinder(int dim); //constructor
@@ -223,9 +227,54 @@ bool pathfinder::addwalls() {
 
 		return tf;
 }
-void pathfinder::move()
+void pathfinder::move(int dim)
 {
+	int mapsize = dim * dim;
+	int forwardVal = dim;
+	int backVal = -dim;
+	int leftVal = -1;
+	int rightVal = 1;
+	cout << "the startpoint is" << startpoint << endl;
+	cout << "the endpoint is " << endpoint << endl;
+	curPos = startpoint;
+	cout << "the ary vals are " << ary[forwardVal - 1] << endl;
+	while (curPos != endpoint) 
+	{
+		//cout << "the current position of our pathfinder is " << curPos << endl;
+		if (curPos+forwardVal<mapsize && ary[curPos + forwardVal] == false) 
+		{
+			cout << "we can and will go forward" << endl;
+			curPos += forwardVal;
+		}
+		else if (curPos + forwardVal < mapsize && ary[curPos + leftVal] == false)
+		{
+			cout << "we can and will go left" << endl;
+			curPos += leftVal;
+		}
+		else if (curPos + forwardVal < mapsize && ary[curPos + rightVal] == false)
+		{
+			cout << "we can and will go right" << endl;
+			curPos += rightVal;
+		}
+		else if (curPos + forwardVal < mapsize && ary[curPos + backVal] == false)
+		{
+			cout << "we can and will go back/down" << endl;
+			curPos += backVal;
+		}
+	}
+}
 
+
+void pathfinder::setbounds(int dim) //sets the boundaries for the map in regards to where we cannot go left or right as in move one unit at a time through the single dimension array 
+{
+	int distToNextBounds = dim;//set distance for reaching next left or right boundary
+	for (int i = 0;i < distToNextBounds;i++) 
+	{
+		leftBounds[i] = i * distToNextBounds;//set array values to integer correlating to left edge of map/map array ary
+		rightBounds[i] = i * distToNextBounds + distToNextBounds - 1;
+		cout << "left boundary #" << i << "is: " << leftBounds[i] << endl;
+		cout << "right boundary #" << i << "is: " << rightBounds[i] << endl;
+	}
 }
 
 
@@ -270,7 +319,8 @@ void pathfinder::startEndPoint(int dim)
 
 pathfinder::pathfinder(int dim):map(C)
 {
-	int size = dim*dim;//sets size to dim dimensions
+	int bsize = dim;//sets size to dim dimensions for boundary arrays
+	int size = dim*dim;//sets size to dim *dim dimensions
 	cout << "size is " << size << endl;
 	
 	ary = new bool[size];
@@ -295,6 +345,22 @@ pathfinder::pathfinder(int dim):map(C)
 			cout << "decisionArray[" << i << "] is " << decisionArray[i] << endl;
 		}
 	}
+
+	leftBounds = new int[bsize];
+	for (int i = 0;i < bsize;i++) {
+		if (&leftBounds[i]) {
+			leftBounds[i] = 0;//setting initial values
+			cout << "leftBounds[" << i << "] is " << leftBounds[i] << endl;
+		}
+	}
+
+	rightBounds = new int[bsize];
+	for (int i = 0;i < bsize;i++) {
+		if (&rightBounds[i]) {
+			rightBounds[i] = 0;//setting initial values
+			cout << "leftBounds[" << i << "] is " << rightBounds[i] << endl;
+		}
+	}
 	
 	for (int i = 0;i < (size);i++) {
 		if (&ary[i]) {
@@ -308,9 +374,12 @@ pathfinder::pathfinder(int dim):map(C)
 	{
 			
 			checkpoints[i] = 0;//sets all values to NULL since we dont have any place to return to at the start
-			decisionArray[i] = 0;//this will set all values to zero which will correspond to not having visited or more accurately made a decision at the lcoation yet
-		
-		
+			decisionArray[i] = 0;//this will set all values to zero which will correspond to not having visited or more accurately made a decision at the lcoation yet	
+	}
+	for (int i = 0; i < bsize;i++) 
+	{
+		leftBounds[i] = 0;//sets all values to zero since we dont want garbage
+		rightBounds[i] = 0; //sets all values to zero since we dont want garbage
 	}
 	
 	cout << "this is the size of ary" << sizeof(ary) << endl;
@@ -335,7 +404,10 @@ pathfinder::~pathfinder()
 	cout << "checkpoints is null" << endl;
 	delete[] decisionArray;//get rid of unncessary stuff here for now until we determine we want to use it longer
 	cout << "decisionArray is gone" << endl;
-	
+	delete[] leftBounds;//get rid of unncessary stuff here for now until we determine we want to use it longer
+	cout << "leftBounds array is gone" << endl;
+	delete[] rightBounds;//get rid of unncessary stuff here for now until we determine we want to use it longer
+	cout << "rightBounds array is gone" << endl;
 	
 	decisionArray = NULL;//get rid of dangly things
 	cout << "decisionArray is null" << endl;
@@ -370,7 +442,8 @@ int main()
 		pathfinder pf1(dim);//sets up the pathfinder map using map1's data
 		cout << "for some reason putting this here let's startendpoint work and without it doesn't" << endl;
 		pf1.startEndPoint(dim);//sets up the start and endpoints for the pfs map
-		
+		pf1.setbounds(dim);//sets up the left and right boundaries to stop illegal moves through the single dimension array map ary
+		pf1.move(dim);//will tell the pathfinder to move through the map until it reaches the endpoint... if it ever does which i doubt it will at the moment
 		reRun();//asks whether the user wants to run the program again or close it
 		//cout << "help" << endl;
 	}
