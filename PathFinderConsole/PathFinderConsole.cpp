@@ -40,7 +40,9 @@ class map {
 //our impromptu navigator who will treak through the perilous depths of the dungeon
 class pathfinder : public map {
 	protected:
-		int curPos;//the current position of the pathfinder in the map
+		int counter;//counter to be used in move function while loop
+		int movesTaken;//a counter for how many actual moves have been taken to reach the end or fail to reach the end
+		int prevPos, curPos;//the current/previous position of the pathfinder in the map tracked as an integer related to the index of the maparray ary
 		int sizeX, sizeY;//rows / columns for map
 		int totSize = sizeX * sizeY;//may use for shortcutting to get total size
 		bool *ary;//our dynamically allocatable array which will be a lightweight solution for representing the map as opposed to 2D attempts
@@ -229,38 +231,108 @@ bool pathfinder::addwalls() {
 }
 void pathfinder::move(int dim)
 {
-	int mapsize = dim * dim;
-	int forwardVal = dim;
-	int backVal = -dim;
-	int leftVal = -1;
-	int rightVal = 1;
+
+	bool cantMove = false;//tells us whether we managed to find a spot with no further possible moves
+	bool hitRight = false;
+	bool hitLeft = false;
+	
+	int mapsize = dim * dim;//used to make sure vertially we are still in the map if we move forward or back
+	int forwardVal = dim;//number of indices we will add from current index position in array when going forward
+	int backVal = -dim;//number of indices we will reduce from current index position in array when going back
+	int leftVal = -1;//number of indices we will reduce from current index position in array when going left
+	int rightVal = 1;//number of indices we will add from current index position in array when going right
 	cout << "the startpoint is" << startpoint << endl;
 	cout << "the endpoint is " << endpoint << endl;
 	curPos = startpoint;
-	cout << "the ary vals are " << ary[forwardVal - 1] << endl;
-	while (curPos != endpoint) 
+	//cout << "the ary vals are " << ary[forwardVal - 1] << endl;
+	//while (curPos != endpoint)
+	while (curPos != endpoint && counter < mapsize * 4)
 	{
-		//cout << "the current position of our pathfinder is " << curPos << endl;
-		if (curPos+forwardVal<mapsize && ary[curPos + forwardVal] == false) 
+		++counter;
+		cout << counter << endl;
+
+		if (decisionArray[curPos] == 0)
 		{
-			cout << "we can and will go forward" << endl;
-			curPos += forwardVal;
+			decisionArray[curPos] += 1;
+			if (curPos + forwardVal < mapsize && ary[curPos + forwardVal] == false)
+			{
+				prevPos = curPos;
+				cout << "we can and will go forward" << endl;
+				curPos += forwardVal;
+			}
 		}
-		else if (curPos + forwardVal < mapsize && ary[curPos + leftVal] == false)
+		else if (decisionArray[curPos] == 1)
 		{
-			cout << "we can and will go left" << endl;
-			curPos += leftVal;
+			decisionArray[curPos] += 1;
+			if (curPos + leftVal >= 0 && ary[curPos + leftVal] == false &&(curPos+leftVal) )
+			{
+				for (int i = 0;i < forwardVal;i++) {//go through all the values in leftBounds to see if we will hit a left wall with the move
+					if (leftBounds[i] == curPos + leftVal) {
+						hitLeft = true;
+						cout << "leftB is: " << leftBounds[i] << endl;
+						cout << "curPos+leftVal is: " << curPos + leftVal << endl;
+					}
+				}
+				if (hitLeft==false) {//if we didn't hit a wall we will proceed with the move
+					prevPos = curPos;
+					cout << "we can and will go left" << endl;
+					curPos += leftVal;
+				}
+				else { cout << "we hit a left wall" << endl; hitLeft = false; }//reset for next move
+			}
+
 		}
-		else if (curPos + forwardVal < mapsize && ary[curPos + rightVal] == false)
+		else if (decisionArray[curPos] == 2)
 		{
-			cout << "we can and will go right" << endl;
-			curPos += rightVal;
+			decisionArray[curPos] += 1;
+			if (curPos + rightVal < mapsize && ary[curPos + rightVal] == false)
+			{
+				for (int i = 0;i < forwardVal;i++) {//go through all the values in rightBounds to see if we will hit a right wall with the move
+					if (rightBounds[i] == (curPos + rightVal)) {
+						hitRight = true;
+						cout << "leftB is: " << rightBounds[i] << endl;
+						cout << "curPos+leftVal is: " << curPos + rightVal << endl;
+					}
+				}
+				if (hitRight==false) {//if we didn't hit a wall we will proceed with the move
+					prevPos = curPos;
+					cout << "we can and will go right" << endl;
+					curPos += rightVal;
+				}
+				else { cout << "we hit a right wall" << endl; hitRight = false; }//reset for next move
+			}
+
 		}
-		else if (curPos + forwardVal < mapsize && ary[curPos + backVal] == false)
+		else if (decisionArray[curPos] == 3)
 		{
-			cout << "we can and will go back/down" << endl;
-			curPos += backVal;
+			decisionArray[curPos] += 1;
+			if (curPos + backVal >= 0 && ary[curPos + backVal] == false)
+			{
+				prevPos = curPos;
+				cout << "we can and will go back/down" << endl;
+				curPos += backVal;
+			}
 		}
+		else
+		{
+			cantMove = true;
+		}
+
+		if (cantMove == false)
+		{
+			cout << "the current position is: " << curPos << endl;
+			cout << "the decisionArray value is now: " << decisionArray[curPos] << endl;
+		}
+		else
+		{
+			cout << "you are trapped it seems" << endl;
+			break;
+		}
+
+
+	}
+	if (cantMove == false) {
+		cout << "congratulations pathfinder! You made it to the endpoint!" << endl;
 	}
 }
 
