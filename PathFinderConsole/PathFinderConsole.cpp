@@ -57,6 +57,7 @@ class pathfinder : public map {
 		 * ary[i*sizeX + j]//reference in case I ever forget
 		 */
 	public:
+		int setPosToCheckpoint(int mapsize);
 		void setbounds(int dim);
 		void move(int dim);  //handles decision making and execution of movement through map
 		void startEndPoint(int dim); // sets up the starting point and ending point of the map exploration
@@ -229,13 +230,27 @@ bool pathfinder::addwalls() {
 
 		return tf;
 }
+int pathfinder::setPosToCheckpoint(int mapsize) 
+{
+	
+	int length = mapsize;//the length of the checkpoints array
+	for (int i = 0;i < length;i++) 
+	{
+		if (this->checkpoints[i] == 1) 
+		{
+			return i;//returns the point to set our curPos to
+		}
+	}
+	return length;//if we dont have a checkpoint we will return a value that is one outside of the possible indexes which will lead us to determine we are trapped/the map is impossible to clear
+	
+}
 void pathfinder::move(int dim)
 {
 
 	bool cantMove = false;//tells us whether we managed to find a spot with no further possible moves
 	bool hitRight = false;
 	bool hitLeft = false;
-	
+	int newPos=0;//the index we will move to if the current position is exhausted of options
 	int mapsize = dim * dim;//used to make sure vertially we are still in the map if we move forward or back
 	int forwardVal = dim;//number of indices we will add from current index position in array when going forward
 	int backVal = -dim;//number of indices we will reduce from current index position in array when going back
@@ -245,7 +260,7 @@ void pathfinder::move(int dim)
 	cout << "the endpoint is " << endpoint << endl;
 	curPos = startpoint;
 	//cout << "the ary vals are " << ary[forwardVal - 1] << endl;
-	//while (curPos != endpoint)
+
 	while (curPos != endpoint && counter < mapsize * 4)
 	{
 		++counter;
@@ -254,9 +269,10 @@ void pathfinder::move(int dim)
 		if (decisionArray[curPos] == 0)
 		{
 			decisionArray[curPos] += 1;
+			checkpoints[curPos] = 1;//tells us that this is a point to return to
 			if (curPos + forwardVal < mapsize && ary[curPos + forwardVal] == false)
 			{
-				prevPos = curPos;
+				
 				cout << "we can and will go forward" << endl;
 				curPos += forwardVal;
 			}
@@ -264,8 +280,10 @@ void pathfinder::move(int dim)
 		else if (decisionArray[curPos] == 1)
 		{
 			decisionArray[curPos] += 1;
+			
 			if (curPos + leftVal >= 0 && ary[curPos + leftVal] == false &&(curPos+leftVal) )
 			{
+				
 				for (int i = 0;i < forwardVal;i++) {//go through all the values in leftBounds to see if we will hit a left wall with the move
 					if (leftBounds[i] == curPos + leftVal) {
 						hitLeft = true;
@@ -285,6 +303,7 @@ void pathfinder::move(int dim)
 		else if (decisionArray[curPos] == 2)
 		{
 			decisionArray[curPos] += 1;
+			
 			if (curPos + rightVal < mapsize && ary[curPos + rightVal] == false)
 			{
 				for (int i = 0;i < forwardVal;i++) {//go through all the values in rightBounds to see if we will hit a right wall with the move
@@ -306,12 +325,25 @@ void pathfinder::move(int dim)
 		else if (decisionArray[curPos] == 3)
 		{
 			decisionArray[curPos] += 1;
+			checkpoints[curPos] = 0;//tells us that this is no longer a point to return to
 			if (curPos + backVal >= 0 && ary[curPos + backVal] == false)
 			{
-				prevPos = curPos;
+				
 				cout << "we can and will go back/down" << endl;
 				curPos += backVal;
 			}
+			
+		}
+
+		else if(decisionArray[curPos] == 4 && newPos!=mapsize)
+		{	
+			checkpoints[curPos] = 0;
+			newPos = setPosToCheckpoint(mapsize);
+			cout << "newPos is : " << newPos << endl;
+		
+			
+			curPos = newPos;
+			cout << "we have moved to a checkpoint: checkpoint position: "<< newPos << endl;
 		}
 		else
 		{
@@ -333,6 +365,7 @@ void pathfinder::move(int dim)
 	}
 	if (cantMove == false) {
 		cout << "congratulations pathfinder! You made it to the endpoint!" << endl;
+		cout << "you arrived at position: " << curPos << " and the endpoint is " << endpoint << endl;
 	}
 }
 
