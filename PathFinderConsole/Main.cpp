@@ -27,7 +27,6 @@ int main()
 		map1.Print();//prints out the values for the dynamic maps map/grid(gPtr) for map1
 		cout << "this is the dimension of map1 " << map1.pubdim << endl;
 		pathfinder pf1(dim);//sets up the pathfinder map using map1's data
-		cout << "for some reason putting this here let's startendpoint work and without it doesn't" << endl;
 		pf1.startEndPoint(dim);//sets up the start and endpoints for the pfs map
 		pf1.setbounds(dim);//sets up the left and right boundaries to stop illegal moves through the single dimension array map ary
 		pf1.move(dim);//will tell the pathfinder to move through the map until it reaches the endpoint... if it ever does which i doubt it will at the moment
