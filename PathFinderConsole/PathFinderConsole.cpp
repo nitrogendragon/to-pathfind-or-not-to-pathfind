@@ -2,6 +2,7 @@
 //
 
 #include "pch.h"
+#include "PathFinderConsole.h"
 #include <iostream>
 #include <random>
 #include <string>
@@ -9,62 +10,15 @@
 #include <vector>
 #include <sstream>
 using namespace std;
-const int rows = 10;
-const int cols = 10;
-bool proceederval = true;//used for rerun function to determine whether to continue executing the program
-void reRun();//will prompt for user input and continue executing if user enters anything except 'exit;
-int genRand(int low, int high); //generates random numbers
+
+
+
 void ClearScreen()//clears the screen sord've
 {
 	cout << string(100, '\n');
 }
 //the map to be navigated 
-class map {
-	protected:
-		int C; // No. of cols
-		bool** gPtr; //pointer to pointer of bools to be used for creating impromptu 2D array dynamically
-	public:
-		bool *mapArray;
-		void Print();//function used to print dynamically sized map
-		int pubdim = C;//value to be used to access C value from pathfinder class startendpoint function
-		map(int C);   // Constructor 
-		~map(); //destructor
-	// function to add a wall to the map 
-		void addWall();
-		
-		bool grid[rows][cols];//2D array using constants as size parameters 
-		
-		void assignWalls(bool grid[rows][cols]);//will use random numbers to create the map via bools i.e. true is wall false is roamable land
-	
-};
-//our impromptu navigator who will treak through the perilous depths of the dungeon
-class pathfinder : public map {
-	protected:
-		int counter;//counter to be used in move function while loop
-		int movesTaken;//a counter for how many actual moves have been taken to reach the end or fail to reach the end
-		int prevPos, curPos;//the current/previous position of the pathfinder in the map tracked as an integer related to the index of the maparray ary
-		int sizeX, sizeY;//rows / columns for map
-		int totSize = sizeX * sizeY;//may use for shortcutting to get total size
-		bool *ary;//our dynamically allocatable array which will be a lightweight solution for representing the map as opposed to 2D attempts
-		int *checkpoints;//this will hold all the points that we need to return to in the case that we reach a deadend while still having other paths we could have taken from these points
-		int *decisionArray;//this array will hold integers that will correspond to whether a location has been visited and what action to take based on previous actions corresponding to the current int
-		int *leftBounds;//this array will hold the left boundaries for ensuring that when trying to move particularly left we dont just jump to a row down on the other side of the map
-		int *rightBounds;//this pointer to an int array will hold the left boundaries for ensuring that when trying to move right we dont just jum to a row up on the other side of the map
-		int startpoint;//the value associated to the startpoint
-		int endpoint;//the value associated to the endpoint
-												  
-		/* ary[i][j] is then rewritten as
-		 * ary[i*sizeX + j]//reference in case I ever forget
-		 */
-	public:
-		int setPosToCheckpoint(int mapsize);
-		void setbounds(int dim);
-		void move(int dim);  //handles decision making and execution of movement through map
-		void startEndPoint(int dim); // sets up the starting point and ending point of the map exploration
-		bool addwalls();//adds walls to the array being passed as a function argument
-		pathfinder(int dim); //constructor
-		~pathfinder(); //destructor
-};
+
 
 
 /*https://www.geeksforgeeks.org/create-dynamic-2d-array-inside-class-c/ link to where I got help for setting up a non-const initialzed '2D' array*/
@@ -170,8 +124,8 @@ void map::Print() {
 }
 
 //Function asking for user input to determine whether to rerun the program
-void reRun() {
-
+bool reRun() {
+	bool proceederval = true;
 	string choice;//holds the users value entered
 	string quit = "exit";
 	cout << "please enter 'exit' to stop the program or hit enter to continue ";
@@ -181,7 +135,8 @@ void reRun() {
 	}
 	cout << choice << endl;
 	proceederval= ((choice == "exit") ? false : true);//if choice is exit the program will quit otherwise it will run again upon hitting enter
-	
+	cout << proceederval << endl;
+	return proceederval;
 }
 
 
@@ -246,7 +201,7 @@ int pathfinder::setPosToCheckpoint(int mapsize)
 }
 void pathfinder::move(int dim)
 {
-
+	int totalMoves = 0;//so i can print out the total number of moves made at the end of function
 	bool cantMove = false;//tells us whether we managed to find a spot with no further possible moves
 	bool hitRight = false;
 	bool hitLeft = false;
@@ -358,6 +313,8 @@ void pathfinder::move(int dim)
 		else
 		{
 			cout << "you are trapped it seems" << endl;
+			totalMoves = counter;//mostly doing because having the variable name be total moves makes it clearer what the intention is
+			cout << "The total number of moves you made is: " << totalMoves << endl;
 			break;
 		}
 
@@ -366,6 +323,8 @@ void pathfinder::move(int dim)
 	if (cantMove == false) {
 		cout << "congratulations pathfinder! You made it to the endpoint!" << endl;
 		cout << "you arrived at position: " << curPos << " and the endpoint is " << endpoint << endl;
+		totalMoves = counter;//mostly doing because having the variable name be total moves makes it clearer what the intention is
+		cout << "The total number of moves you made is: " << totalMoves << endl;
 	}
 }
 
@@ -522,37 +481,7 @@ pathfinder::~pathfinder()
 
 
 
-int main()
-{
-	ClearScreen();//clears the screen for us maybe...
-	while (proceederval==true)//checks to make sure we still want to continue which on the first run we will ofc and thusly runs it and then depending on rerun function will decide whether to do so again
-	{
-		int dim = 0;//initializes the dimension int to 0
-		dim = getNum();//asks the user for a number to set dim to
-		cout << "the value of dim is " << dim << endl;//prints dim
-		map map1(dim);//initializes map1 with a user defined size of dim
-		map1.assignWalls(map1.grid);//randomly sets walls to the grid for map1 noting that this is the const based map which isn't using the user input dim dimensions
-		
-		for (int i = 0;i < rows;i++) 
-		{
-			for (int y = 0;y < cols;y++) 
-			{
-				cout << map1.grid[i][y] << " ";//prints const based grid layout
-			}
-			cout << endl;
-		}
-		map1.addWall();//adds walls to dynamic '2D' array aka pointers to 1D arrays
-		map1.Print();//prints out the values for the dynamic maps map/grid(gPtr) for map1
-		cout <<"this is the dimension of map1 "<<map1.pubdim << endl;
-		pathfinder pf1(dim);//sets up the pathfinder map using map1's data
-		cout << "for some reason putting this here let's startendpoint work and without it doesn't" << endl;
-		pf1.startEndPoint(dim);//sets up the start and endpoints for the pfs map
-		pf1.setbounds(dim);//sets up the left and right boundaries to stop illegal moves through the single dimension array map ary
-		pf1.move(dim);//will tell the pathfinder to move through the map until it reaches the endpoint... if it ever does which i doubt it will at the moment
-		reRun();//asks whether the user wants to run the program again or close it
-		//cout << "help" << endl;
-	}
-}
+
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu
 // Debug program: F5 or Debug > Start Debugging menu
